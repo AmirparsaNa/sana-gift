@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>برای تو</title>
+    <!-- کتابخانه html2canvas برای گرفتن اسکرین‌شات و دانلود عکس -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Vazirmatn', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #070913;
+        }
+
+        /* --- صفحه لودینگ --- */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #070913;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.8s ease;
+        }
+
+        .loading-title {
+            color: #a5b4fc;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            font-weight: 300;
+            animation: pulseText 1.5s infinite alternate;
+        }
+
+        .progress-container {
+            width: 280px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            border-radius: 10px;
+            transition: width 0.1s linear;
+        }
+
+        .progress-percent {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        @keyframes pulseText {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* --- صفحه اصلی (گل رز) --- */
+        #main-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #0f172a 0%, #070913 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #main-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ستاره‌های پس‌زمینه */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+            animation: twinkle var(--duration) infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* ظرف گل و متن‌ها */
+        .content-container {
+            position: relative;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .flower-svg {
+            width: 220px;
+            height: 340px;
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.3));
+        }
+
+        /* انیمیشن‌های اجزای گل */
+        .stem {
+            stroke: #22c55e;
+            stroke-width: 4;
+            stroke-linecap: round;
+            fill: none;
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+            animation: drawStem 2s ease forwards 0.5s;
+        }
+
+        .leaf {
+            fill: #16a34a;
+            opacity: 0;
+            transform-origin: bottom center;
+            animation: growLeaf 1s ease forwards 2s;
+        }
+
+        .petal {
+            fill: url(#blueGradient);
+            stroke: #38bdf8;
+            stroke-width: 1;
+            opacity: 0;
+            transform-origin: center bottom;
+            transform: scale(0);
+            animation: bloomPetal 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* تایمینگ باز شدن گلبرگ‌ها */
+        .p1 { animation-delay: 2.8s; }
+        .p2 { animation-delay: 3.1s; }
+        .p3 { animation-delay: 3.4s; }
+        .p4 { animation-delay: 3.7s; }
+        .p5 { animation-delay: 4.0s; }
+        .p6 { animation-delay: 4.3s; }
+
+        @keyframes drawStem {
+            to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes growLeaf {
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes bloomPetal {
+            to { opacity: 0.9; transform: scale(1); }
+        }
+
+        /* متن‌های تبریک زیر گل */
+        .text-box {
+            text-align: center;
+            margin-top: 25px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.8s ease forwards 4.8s;
+        }
+
+        .message {
+            color: #f1f5f9;
+            font-size: 1.15rem;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            margin-bottom: 8px;
+            min-height: 30px;
+        }
+
+        .signature {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 350;
+            letter-spacing: 1px;
+        }
+
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* دکمه ذخیره کارت‌پستال */
+        .save-btn {
+            position: absolute;
+            bottom: 25px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards 5.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 100;
+        }
+
+        .save-btn:active {
+            background: rgba(56, 189, 248, 0.4);
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- صفحه لودینگ -->
+    <div id="loading-screen">
+        <div class="loading-title">this is for you</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-percent" id="progressPercent">0%</div>
+    </div>
+
+    <!-- صفحه اصلی -->
+    <div id="main-screen">
+        <div class="stars" id="starsContainer"></div>
+        
+        <div class="content-container" id="captureArea">
+            <svg class="flower-svg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="50%" stop-color="#0284c7" />
+                        <stop offset="100%" stop-color="#0369a1" />
+                    </linearGradient>
+                </defs>
+
+                <!-- ساقه و برگ‌ها -->
+                <path class="stem" d="M100,300 Q95,200 100,120" />
+                <path class="leaf" d="M100,220 C80,210 60,220 50,200 C70,205 85,210 100,220 Z" />
+                <path class="leaf" d="M100,170 C120,160 140,170 150,150 C130,155 115,160 100,170 Z" />
+
+                <!-- گلبرگ‌های رز آبی -->
+                <g transform="translate(100, 115)">
+                    <path class="petal p1" d="M 0,0 C -35,-20 -50,-60 -25,-85 C -10,-100 10,-100 25,-85 C 50,-60 35,-20 0,0 Z" />
+                    <path class="petal p2" d="M 0,0 C -45,-10 -65,-40 -45,-70 C -30,-90 -5,-80 0,-60 C 5,-80 30,-90 45,-70 C 65,-40 45,-10 0,0 Z" />
+                    <path class="petal p3" d="M 0,0 C -30,-15 -45,-45 -25,-65 C -10,-80 10,-80 25,-65 C 45,-45 30,-15 0,0 Z" />
+                    <path class="petal p4" d="M 0,0 C -25,-10 -35,-35 -15,-55 C -5,-65 5,-65 15,-55 C 35,-35 25,-10 0,0 Z" />
+                    <path class="petal p5" d="M 0,0 C -15,-10 -25,-25 -10,-40 C -3,-45 3,-45 10,-40 C 25,-25 15,-10 0,0 Z" />
+                    <path class="petal p6" d="M 0,0 C -8,-5 -12,-15 -5,-25 C -2,-30 2,-30 5,-25 C 12,-15 8,-5 0,0 Z" />
+                </g>
+            </svg>
+
+            <!-- متن‌های زیر گل -->
+            <div class="text-box">
+                <div class="message" id="typedMessage"></div>
+                <div class="signature">Made by Amirparsa</div>
+            </div>
+        </div>
+
+        <!-- دکمه ذخیره کارت‌پستال -->
+        <button class="save-btn" id="saveBtn" onclick="saveAsImage()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            ذخیره کارت‌پستال
+        </button>
+    </div>
+
+    <script>
+        // اجرای فوری اسکریپت بدون انتظار برای پج‌لود کامل (مقاوم در برابر باگ‌های مرورگر موبایل)
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const loadingScreen = document.getElementById('loading-screen');
+        const mainScreen = document.getElementById('main-screen');
+
+        let currentProgress = 0;
+        const interval = setInterval(() => {
+            currentProgress += Math.floor(Math.random() * 12) + 6; // سرعت پر شدن مناسب برای موبایل
+            if (currentProgress >= 100) {
+                currentProgress = 100;
+                clearInterval(interval);
+                finishLoading();
+            }
+            progressBar.style.width = currentProgress + '%';
+            progressPercent.textContent = currentProgress + '%';
+        }, 40);
+
+        // سیستم ایمنی پشتیبان (اگر به هر دلیلی اینتروال گیر کرد، بعد از 2.5 ثانیه اجباراً صفحه باز شود)
+        setTimeout(() => {
+            if (loadingScreen.style.display !== 'none') {
+                currentProgress = 100;
+                clearInterval(interval);
+                progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
+                finishLoading();
+            }
+        }, 2500);
+
+        function finishLoading() {
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    mainScreen.classList.add('active');
+                    createStars();
+                    startTypewriter();
+                }, 600);
+            }, 200);
+        }
+
+        // ساخت ستاره‌های پس‌زمینه
+        function createStars() {
+            const starsContainer = document.getElementById('starsContainer');
+            const starCount = 40; // تعداد بهینه برای روانی کامل در موبایل
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                const size = Math.random() * 2.5 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                
+                const duration = Math.random() * 3 + 2;
+                star.style.setProperty('--duration', `${duration}s`);
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // افکت تایپ متن
+        function startTypewriter() {
+            const text = "برای خوب شدن حال تو خانوم خوشگل :)";
+            const target = document.getElementById('typedMessage');
+            let index = 0;
+
+            setTimeout(() => {
+                const typing = setInterval(() => {
+                    if (index < text.length) {
+                        target.textContent += text.charAt(index);
+                        index++;
+                    } else {
+                        clearInterval(typing);
+                    }
+                }, 80);
+            }, 2800);
+        }
+
+        // قابلیت ذخیره عکس
+        function saveAsImage() {
+            const captureArea = document.getElementById('captureArea');
+            const saveBtn = document.getElementById('saveBtn');
+            
+            saveBtn.style.opacity = '0';
+
+            html2canvas(captureArea, {
+                backgroundColor: '#070913',
+                scale: 2,
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'For-You-Sana.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                saveBtn.style.opacity = '1';
+            }).catch(err => {
+                console.error('خطا در ذخیره تصویر:', err);
+                saveBtn.style.opacity = '1';
+            });
+        }
+    </script>
+</body>
+</html>
